@@ -10,7 +10,7 @@
     "migrate": "prisma migrate deploy",
     "reset": "prisma migrate reset",
     "seed": "ts-node prisma/seed.ts",
-    "start": "yarn migrate && yarn seed && ts-node src/index.ts"
+    "start": "ts-node src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
