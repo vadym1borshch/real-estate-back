@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  lastName     String
+  professionId String?
+  profession   Profession? @relation(fields: [professionId], references: [id])
+  description  String?
+  phone        String
+  email        String      @unique
+  address      String
+  province      String?
+  photo        String
+  verifiedId   String?
+  verified     Verified?   @relation(fields: [verifiedId], references: [id])
+  agencyId     String?
+  agency       Agency?     @relation(fields: [agencyId], references: [id])
+  password     String
+  createdAt    DateTime    @default(now())
+}
+
+model Profession {
+  id      String          @id @default(uuid())
+  title   String
+  key     String          @unique
+  users   User[]
+  workers ServiceWorker[]
+}
+
+model Verified {
+  id    String  @id @default(uuid())
+  value Boolean
+  title String
+  users User[]
+}
+
+model Agency {
+  id      String @id @default(uuid())
+  name    String
+  type    String
+  address String
+  phone   String
+  email   String
+  website String
+  users   User[]
+}
+
+model Service {
+  id      String  @unique
+  title   String
+  checked Boolean
+}
+
+model ServiceWorker {
+  id           String     @id @default(uuid())
+  name         String
+  profession   Profession @relation(fields: [professionId], references: [id])
+  professionId String
+  description  String?
+  phone        String
+  email        String     @unique
+  address      String
+  photo        String
+  createdAt    DateTime   @default(now())
+}
