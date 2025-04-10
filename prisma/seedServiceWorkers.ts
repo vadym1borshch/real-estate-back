@@ -259,7 +259,7 @@ const workers = [
 
 export const serviceWorkersSeed = async () => {
   const professions = await prisma.profession.findMany()
-
+  await prisma.serviceWorker.deleteMany();
   await prisma.serviceWorker.createMany({
     data: workers.map((worker, index) => {
       const profession =

@@ -4,7 +4,7 @@ import { v4 } from 'uuid'
 const prisma = new PrismaClient()
 
 export const servicesSeed = async () => {
-
+  await prisma.service.deleteMany()
   await prisma.service.createMany({
     data: [
       {
