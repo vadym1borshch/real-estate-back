@@ -5,8 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
-    "migrate": "prisma migrate dev --name init",
     "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev --name init",
+    "migrate": "prisma migrate deploy",
     "reset": "prisma migrate reset",
     "seed": "ts-node prisma/seed.ts",
     "start": "yarn migrate && yarn seed && ts-node src/index.ts"
