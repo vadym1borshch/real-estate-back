@@ -8,7 +8,8 @@
     "migrate": "prisma migrate dev --name init",
     "generate": "prisma generate",
     "reset": "prisma migrate reset",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "start": "yarn migrate && yarn seed && ts-node src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
