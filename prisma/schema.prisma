@@ -17,8 +17,8 @@ model User {
   phone        String
   email        String      @unique
   address      String
-  province      String?
-  photo        String
+  province     String?
+  photo        String?     @db.Text
   verifiedId   String?
   verified     Verified?   @relation(fields: [verifiedId], references: [id])
   agencyId     String?

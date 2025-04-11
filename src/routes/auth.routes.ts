@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
-import { login, register, update } from '../controllers/auth.controller'
+import { login, register } from '../controllers/auth.controller'
 
 const router = Router()
 
@@ -10,10 +10,6 @@ router.post('/register', async (req: Request, res: Response) => {
 
 router.post('/login', async (req: Request, res: Response) => {
   await login(req, res)
-})
-
-router.put('/update', async (req: Request, res: Response) => {
-  await update(req, res)
 })
 
 
