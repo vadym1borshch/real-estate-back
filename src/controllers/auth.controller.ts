@@ -42,6 +42,26 @@ export const register = async (req: Request, res: Response) => {
         },
       },
     })
+
+    //only for testing
+    await prisma.messageThread.create({
+      data: {
+        status: 'new',
+        isArchived: false,
+        email: 'support@yourapp.com',
+        userId: user.id,
+        replies: {
+          create: [
+            {
+              message: '👋 Welcome to the platform!',
+              senderName: 'Support',
+              senderLastName: 'Team',
+              senderEmail: 'support@yourapp.com',
+            },
+          ],
+        },
+      },
+    })
     const token = signToken({ userId: user.id })
     res.status(201).json({ token, user })
   } catch (err) {

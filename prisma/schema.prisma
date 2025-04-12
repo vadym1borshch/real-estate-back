@@ -8,23 +8,24 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  name         String
-  lastName     String
-  professionId String?
-  profession   Profession? @relation(fields: [professionId], references: [id])
-  description  String?
-  phone        String
-  email        String      @unique
-  address      String
-  province     String?
-  photo        String?     @db.Text
-  verifiedId   String?
-  verified     Verified?   @relation(fields: [verifiedId], references: [id])
-  agencyId     String?
-  agency       Agency?     @relation(fields: [agencyId], references: [id])
-  password     String
-  createdAt    DateTime    @default(now())
+  id             String          @id @default(uuid())
+  name           String
+  lastName       String
+  professionId   String?
+  profession     Profession?     @relation(fields: [professionId], references: [id])
+  description    String?
+  phone          String
+  email          String          @unique
+  address        String
+  province       String?
+  photo          String?         @db.Text
+  verifiedId     String?
+  verified       Verified?       @relation(fields: [verifiedId], references: [id])
+  agencyId       String?
+  agency         Agency?         @relation(fields: [agencyId], references: [id])
+  password       String
+  createdAt      DateTime        @default(now())
+  messageThreads MessageThread[]
 }
 
 model Profession {
@@ -70,4 +71,32 @@ model ServiceWorker {
   address      String
   photo        String
   createdAt    DateTime   @default(now())
+}
+
+model MessageThread {
+  id         String         @id @default(uuid())
+  status     MessageStatus
+  isArchived Boolean        @default(false)
+  email      String
+  replies    MessageReply[] @relation("ThreadReplies")
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  userId     String
+  user       User           @relation(fields: [userId], references: [id])
+}
+
+model MessageReply {
+  id             String        @id @default(uuid())
+  message        String
+  timestamp      DateTime      @default(now())
+  threadId       String
+  thread         MessageThread @relation("ThreadReplies", fields: [threadId], references: [id], onDelete: Cascade)
+  senderName     String
+  senderLastName String
+  senderEmail    String
+}
+enum MessageStatus {
+  new
+  read
 }

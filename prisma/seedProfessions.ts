@@ -29,7 +29,7 @@ const professionSeeds = [
 ]
 
 export const professionsSeed = async () => {
-  await prisma.profession.deleteMany()
+
   await prisma.profession.createMany({
     data: professionSeeds.map((prof) => ({
       key: prof.id,
