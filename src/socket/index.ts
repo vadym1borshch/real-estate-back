@@ -1,13 +1,21 @@
 import { Server, Socket } from 'socket.io'
 import { prisma } from '../prisma/client'
 
+interface Data {
+  recipientId: string,
+  message: string,
+  senderName: string,
+  senderEmail: string,
+  senderLastName: string
+
+}
+
 export const setupSocket = (io: Server) => {
   io.on('connection', (socket: Socket) => {
     const userId = socket.data.user.userId
 
-    socket.on('send-message', async (data) => {
-      const { recipientId, message } = data
-
+    socket.on('send-message', async (data: Data) => {
+      const { recipientId, message, senderName, senderEmail, senderLastName } = data
       const thread = await prisma.messageThread.findFirst({
         where: { userId: recipientId },
       })
@@ -18,9 +26,9 @@ export const setupSocket = (io: Server) => {
         data: {
           message,
           threadId: thread.id,
-          senderName: data.senderName,
-          senderEmail: data.senderEmail,
-          senderLastName: data.senderLastName,
+          senderName,
+          senderEmail,
+          senderLastName,
         },
       })
 

@@ -8,24 +8,27 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  name           String
-  lastName       String
-  professionId   String?
-  profession     Profession?     @relation(fields: [professionId], references: [id])
-  description    String?
-  phone          String
-  email          String          @unique
-  address        String
-  province       String?
-  photo          String?         @db.Text
-  verifiedId     String?
-  verified       Verified?       @relation(fields: [verifiedId], references: [id])
-  agencyId       String?
-  agency         Agency?         @relation(fields: [agencyId], references: [id])
-  password       String
-  createdAt      DateTime        @default(now())
+  id           String      @id @default(uuid())
+  name         String
+  lastName     String
+  professionId String?
+  profession   Profession? @relation(fields: [professionId], references: [id])
+  description  String?
+  phone        String
+  email        String      @unique
+  address      String
+  province     String?
+  photo        String?     @db.Text
+  verifiedId   String?
+  verified     Verified?   @relation(fields: [verifiedId], references: [id])
+  agencyId     String?
+  agency       Agency?     @relation(fields: [agencyId], references: [id])
+  password     String
+  createdAt    DateTime    @default(now())
+
   messageThreads MessageThread[]
+  estates        RealEstate[]    @relation("UserEstates")
+  favorites      RealEstate[]    @relation("UserFavorites")
 }
 
 model Profession {
@@ -82,8 +85,8 @@ model MessageThread {
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
-  userId     String
-  user       User           @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model MessageReply {
@@ -96,6 +99,67 @@ model MessageReply {
   senderLastName String
   senderEmail    String
 }
+
+model RealEstate {
+  id            Int                @id @default(autoincrement())
+  images        RealEstateImages[]
+  label         String
+  isTop         Boolean            @default(false)
+  favorite      Boolean            @default(false)
+  selectedOnMap Boolean            @default(false)
+
+  typeKey   String
+  typeValue String
+
+  addressLocation String
+  addressLat      Float
+  addressLng      Float
+
+  rooms          Int
+  bathroomsTotal Int
+  bathroomsDesc  String
+
+  operationKey   String
+  operationValue String
+
+  livingAreaM2 String
+  landAreaM2   String
+
+  price String
+  views Int    @default(0)
+
+  yearBuilt      Int
+  floors         String
+  garage         String
+  heating        String
+  condition      String
+  commissionFree String
+
+  additionalFeatures String?
+  kitchen            String?
+  loungeArea         String?
+  furnished          String?
+  availability       String?
+  additionalInfo     String?
+
+  ownerId String
+  owner   User   @relation("UserEstates", fields: [ownerId], references: [id])
+
+  favoredBy User[] @relation("UserFavorites")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RealEstateImages {
+  id       String     @id @default(uuid())
+  url      String
+  estateId Int
+  estate   RealEstate @relation(fields: [estateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
 enum MessageStatus {
   new
   read
