@@ -101,41 +101,59 @@ model MessageReply {
 }
 
 model RealEstate {
-  id            Int                @id @default(autoincrement())
-  images        RealEstateImages[]
-  label         String
-  isTop         Boolean            @default(false)
-  favorite      Boolean            @default(false)
-  selectedOnMap Boolean            @default(false)
-
-  typeKey   String
-  typeValue String
+  id              Int                @id @default(autoincrement())
+  images          RealEstateImages[]
+  label           String             @db.Text
+  isTop           Boolean            @default(false)
+  isFavorite      Boolean            @default(false)
+  isSelectedOnMap Boolean            @default(false)
+  status          EstateStatus       @default(moderation)
+  typeKey         String
+  typeValue       String
+  country         String?
+  state           String?
 
   addressLocation String
   addressLat      Float
   addressLng      Float
 
   rooms          Int
-  bathroomsTotal Int
-  bathroomsDesc  String
+  bathroomsTotal Int?
+  bathroomsDesc  String? @db.Text
 
   operationKey   String
   operationValue String
 
   livingAreaM2 String
-  landAreaM2   String
+  landAreaM2   String?
 
-  price String
-  views Int    @default(0)
+  price          String
+  parkPlacePrice String?
+  views          Int     @default(0)
 
-  yearBuilt      Int
-  floors         String
-  garage         String
-  heating        String
-  condition      String
-  commissionFree String
+  yearBuilt         Int
+  floors            String?
+  garage            String?
+  heating           String?
+  condition         String?
+  commissionFree    String?
+  balcony           String?
+  terrace           String?
+  garden            String?
+  energyCertificate String?
+  HBW               String?
+  HBWEnergyClass    String?
+  fGEE              String?
+  fGEEEnergyClass   String?
+  cellar            Boolean @default(false)
 
-  additionalFeatures String?
+  netOperationCosts           String?
+  brokerCommissions           String?
+  brokerCommissionsPercentage String?
+  propertyDescriptions        String? @db.Text
+  locationDescriptions        String? @db.Text
+
+  additionalFeatures String? @db.Text
   kitchen            String?
   loungeArea         String?
   furnished          String?
@@ -149,11 +167,58 @@ model RealEstate {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  street                 String?
+  number                 String?
+  visibleDetailedAddress Boolean @default(false)
+  rentFormation          String?
+
+  premises     RealEstatePremises[]
+  equipments   RealEstateEquipments[]
+  fees         RealEstateFees[]
+  monthlyCosts RealEstateMonthlyCosts[]
+}
+
+model RealEstatePremises {
+  id           String @id @default(uuid())
+  title        String
+  descriptions String
+  value        String
+
+  realEstateId Int
+  realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+}
+
+model RealEstateEquipments {
+  id           String @id @default(uuid())
+  title        String
+  descriptions String
+
+  realEstateId Int
+  realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+}
+
+model RealEstateFees {
+  id           String @id @default(uuid())
+  title        String
+  descriptions String
+
+  realEstateId Int
+  realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+}
+
+model RealEstateMonthlyCosts {
+  id           String @id @default(uuid())
+  title        String
+  descriptions String
+
+  realEstateId Int
+  realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
 }
 
 model RealEstateImages {
   id       String     @id @default(uuid())
-  url      String
+  url      String?    @db.Text
   estateId Int
   estate   RealEstate @relation(fields: [estateId], references: [id], onDelete: Cascade)
 
@@ -163,4 +228,11 @@ model RealEstateImages {
 enum MessageStatus {
   new
   read
+}
+
+enum EstateStatus {
+  active
+  inactive
+  moderation
+  rejected
 }

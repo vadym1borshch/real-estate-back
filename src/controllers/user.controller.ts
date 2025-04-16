@@ -4,6 +4,7 @@ import { uploadToCloudinary } from '../utils/cloudinary'
 import { createHash } from 'crypto'
 import { readFile } from 'fs/promises'
 import bcrypt from 'bcrypt'
+import { User } from '@prisma/client'
 
 
 export const me = async (req: Request, res: Response) => {
@@ -92,7 +93,7 @@ export const update = async (req: Request, res: Response) => {
 
     if (!existing) return res.status(404).json({ error: 'User not found' })
 
-    const dataToUpdate: any = {}
+    const dataToUpdate: Partial<User> = {}
 
     if (email) dataToUpdate.email = email
     if (password) dataToUpdate.password = await bcrypt.hash(password, 10)

@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import { prisma } from '../prisma/client'
+import { RealEstate } from '@prisma/client'
 
 export const getRealEstates = async (req: Request, res: Response) => {
 
@@ -7,11 +8,15 @@ export const getRealEstates = async (req: Request, res: Response) => {
     const estates = await prisma.realEstate.findMany({
       include: {
         images: true,
-        favoredBy:{
+        favoredBy: {
           select: {
             id: true,
           },
-        }
+        },
+        premises: true,
+        equipments: true,
+        fees: true,
+        monthlyCosts: true,
       },
     })
     if (!estates) return res.status(404).json({ error: 'estates not found' })
@@ -26,7 +31,7 @@ export const getRealEstates = async (req: Request, res: Response) => {
             estateId: image.estateId.toString(),
           }
         }),
-        favoredBy: estate.favoredBy.map(el => el.id)
+        favoredBy: estate.favoredBy.map(el => el.id),
       }
     })
 
@@ -110,4 +115,122 @@ export const toggleFavorite = async (req: Request, res: Response) => {
     console.error(err)
     res.status(500).json({ error: 'Server error' })
   }
+}
+
+export const createRealEstate = async (req: Request, res: Response) => {
+  const {
+    userId,
+    images,
+    bathroomsTotal,
+    permittedRentForm,
+    typeKey,
+    yearBuilt,
+    label,
+    cellar,
+    postCode,
+    visibleDetailedAddress,
+    city,
+    addressLat,
+    addressLng,
+    ...params
+  } = req.body
+
+  const newEstate = await prisma.realEstate.create({
+    data: {
+      ...params,
+      label,
+      typeKey,
+      addressLocation: `${postCode} ${city}`,
+      visibleDetailedAddress: visibleDetailedAddress !== 'no',
+      cellar: cellar !== 'no',
+      yearBuilt: +yearBuilt,
+      bathroomsTotal: +bathroomsTotal,
+      addressLat: parseFloat(addressLat),
+      addressLng: parseFloat(addressLng),
+      owner: {
+        connect: { id: userId },
+      },
+      images: {
+        create: images.map((url: string) => ({
+          url,
+          createdAt: new Date(),
+        })),
+      },
+      operationKey: permittedRentForm ? 'rent' : 'buy',
+      operationValue: permittedRentForm ? 'real-estate.operations.rent' : 'real-estate.operations.buy',
+      typeValue: typeKey === 'apartment' ? 'real-estate.type.apartment' : 'real-estate.type.house',
+    },
+    include: {
+      images: true,
+    },
+  })
+  res.json({ estate: newEstate })
+}
+
+export const updateRealEstate = async (req: Request<RealEstate>, res: Response) => {
+  try {
+    const { id, ...updates } = req.body
+
+    if (!id) {
+      return res.status(400).json({ error: 'Missing estate ID' })
+    }
+
+    const existing = await prisma.realEstate.findUnique({
+      where: { id },
+      include: { images: true },
+    })
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Real estate not found' })
+    }
+
+
+    const isEqual = Object.entries(updates).every(([key, value]) => {
+
+      if (key === 'images' && Array.isArray(value)) {
+        const existingUrls = existing.images.map((img) => img.url)
+        return JSON.stringify(existingUrls) === JSON.stringify(value)
+      }
+
+      return (existing as any)[key] === value
+    })
+
+    if (isEqual) {
+      return res.status(200).json({ message: 'Nothing changed', estate: existing })
+    }
+
+    const { images, postCode, city, visibleDetailedAddress, cellar, number, ...restUpdates } = updates
+
+    const updated = await prisma.realEstate.update({
+      where: { id },
+      data: {
+        addressLocation: `${postCode} ${city}`,
+        visibleDetailedAddress: visibleDetailedAddress !== 'no',
+        ...restUpdates,
+        ...(images && {
+          images: {
+            deleteMany: {},
+            create: images.map((url: string) => ({
+              url,
+              createdAt: new Date(),
+            })),
+          },
+        }),
+      },
+      include: { images: true },
+    })
+
+    res.status(200).json({ message: 'Estate updated', estate: updated })
+  } catch (err) {
+    console.error('[UPDATE ESTATE ERROR]', err)
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
+export const deleteRealEstate = async (req: Request, res: Response) => {
+  const { id } = req.query as { id: string }
+  const estate = await prisma.realEstate.findUnique({ where: { id: +id } })
+  if (!estate) return res.status(404).json({ error: 'Estate not found' })
+  await prisma.realEstate.delete({ where: { id: +id } })
+  res.status(200).json({ message: 'real estate delete successfully' })
 }
