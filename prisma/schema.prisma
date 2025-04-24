@@ -135,7 +135,6 @@ model RealEstate {
   floors            String?
   garage            String?
   heating           String?
-  condition         String?
   commissionFree    String?
   balcony           String?
   terrace           String?
@@ -180,19 +179,21 @@ model RealEstate {
 }
 
 model RealEstatePremises {
-  id           String @id @default(uuid())
-  title        String
-  descriptions String
-  value        String
+  id    String @id @default(uuid())
+  key   String
+  label String @db.Text
+  name  String @db.Text
+  value String @db.Text
 
   realEstateId Int
   realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
 }
 
 model RealEstateEquipments {
-  id           String @id @default(uuid())
-  title        String
-  descriptions String
+  id    String  @id @default(uuid())
+  key   String
+  label String  @db.Text
+  value Boolean
 
   realEstateId Int
   realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
@@ -201,6 +202,8 @@ model RealEstateEquipments {
 model RealEstateFees {
   id           String @id @default(uuid())
   title        String
+  key          String
+  value        String
   descriptions String
 
   realEstateId Int
@@ -210,6 +213,8 @@ model RealEstateFees {
 model RealEstateMonthlyCosts {
   id           String @id @default(uuid())
   title        String
+  key          String
+  cost         String
   descriptions String
 
   realEstateId Int

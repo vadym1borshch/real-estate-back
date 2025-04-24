@@ -135,6 +135,17 @@ export const createRealEstate = async (req: Request, res: Response) => {
     ...params
   } = req.body
 
+  const setTypeValue = (typeKey: string) => {
+    if (typeKey === 'apartment') {
+      return 'real-estate.type.apartment'
+    } else if (typeKey === 'house') {
+      return 'real-estate.type.house'
+    } else if (typeKey === 'semi-detached-house') {
+      return 'real-estate.type.semi-detached-house'
+    }
+    return 'real-estate.type.retail-property'
+  }
+
   const newEstate = await prisma.realEstate.create({
     data: {
       ...params,
@@ -158,7 +169,7 @@ export const createRealEstate = async (req: Request, res: Response) => {
       },
       operationKey: permittedRentForm ? 'rent' : 'buy',
       operationValue: permittedRentForm ? 'real-estate.operations.rent' : 'real-estate.operations.buy',
-      typeValue: typeKey === 'apartment' ? 'real-estate.type.apartment' : 'real-estate.type.house',
+      typeValue: setTypeValue(typeKey),
     },
     include: {
       images: true,
@@ -166,6 +177,48 @@ export const createRealEstate = async (req: Request, res: Response) => {
   })
   res.json({ estate: newEstate })
 }
+export const updateRealEstateAdditionalInfo = async (req: Request, res: Response) => {
+  const { id, premises, equipments, fees, monthlyCosts } = req.body
+
+  try {
+    const updated = await prisma.realEstate.update({
+      where: { id },
+      data: {
+       /* livingAreaM2:`${premises[0].value} m²`,*/
+        ...(premises && {
+          premises: {
+            deleteMany: {},
+            create: premises
+          },
+        }),
+        ...(equipments && {
+          equipments: {
+            deleteMany: {},
+            create: equipments,
+          },
+        }),
+        ...(fees && {
+          fees: {
+            deleteMany: {},
+            create: fees,
+          },
+        }),
+        ...(monthlyCosts && {
+          monthlyCosts: {
+            deleteMany: {},
+            create: monthlyCosts,
+          },
+        }),
+      },
+      include: { images: true, premises: true, equipments: true, fees: true, monthlyCosts: true },
+    })
+    res.status(200).json({ message: 'Estate updated', estate: updated })
+  } catch (err) {
+    console.error('[UPDATE ESTATE ERROR]', err)
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
 
 export const updateRealEstate = async (req: Request<RealEstate>, res: Response) => {
   try {
@@ -198,14 +251,21 @@ export const updateRealEstate = async (req: Request<RealEstate>, res: Response) 
     if (isEqual) {
       return res.status(200).json({ message: 'Nothing changed', estate: existing })
     }
+    const key = 'real-estate.type.'
+    const typeV = existing.typeValue.split('.')
+    const estateTypeValue = typeV[typeV.length - 1]
 
-    const { images, postCode, city, visibleDetailedAddress, cellar, number, ...restUpdates } = updates
+    const { images, postCode, city, visibleDetailedAddress, cellar, number, typeKey, ...restUpdates } = updates
 
     const updated = await prisma.realEstate.update({
       where: { id },
       data: {
         addressLocation: `${postCode} ${city}`,
         visibleDetailedAddress: visibleDetailedAddress !== 'no',
+        typeValue: estateTypeValue !== typeKey ? `${key}${typeKey}` : `${key}${estateTypeValue}`,
+        cellar: cellar !== 'no',
+        number: number !== 'no' ? number : null,
+        typeKey,
         ...restUpdates,
         ...(images && {
           images: {
@@ -217,7 +277,7 @@ export const updateRealEstate = async (req: Request<RealEstate>, res: Response) 
           },
         }),
       },
-      include: { images: true },
+      include: { images: true, premises: true, equipments: true, fees: true, monthlyCosts: true },
     })
 
     res.status(200).json({ message: 'Estate updated', estate: updated })
