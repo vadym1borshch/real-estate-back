@@ -11,6 +11,7 @@ import user from './routes/user.routes'
 import messages from './routes/messages.routes'
 import realEstates from './routes/realEstates.routes'
 import uploadImages from './routes/uploadImages.routes'
+import equipments from './routes/equipments.routes'
 import { verifySocketToken } from './middlewares/authSocket'
 import { setupSocket } from './socket'
 
@@ -51,7 +52,7 @@ app.use('/user', user)
 app.use('/messages', messages)
 app.use('/real-estates', realEstates)
 app.use('/', uploadImages)
-
+app.use('/equipments', equipments)
 
 const PORT = Number(process.env.PORT) || 4000
 server.listen(PORT, '0.0.0.0', () => {

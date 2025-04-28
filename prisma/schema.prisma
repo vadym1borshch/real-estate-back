@@ -8,35 +8,38 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  name         String
-  lastName     String
-  professionId String?
-  profession   Profession? @relation(fields: [professionId], references: [id])
-  description  String?
-  phone        String
-  email        String      @unique
-  address      String
-  province     String?
-  photo        String?     @db.Text
-  verifiedId   String?
-  verified     Verified?   @relation(fields: [verifiedId], references: [id])
-  agencyId     String?
-  agency       Agency?     @relation(fields: [agencyId], references: [id])
-  password     String
-  createdAt    DateTime    @default(now())
-
+  id             String          @id @default(uuid())
+  name           String
+  lastName       String
+  professionId   String?
+  description    String?
+  phone          String
+  email          String          @unique
+  address        String
+  province       String?
+  photo          String?         @db.Text
+  verifiedId     String?
+  agencyId       String?
+  password       String
+  createdAt      DateTime        @default(now())
   messageThreads MessageThread[]
   estates        RealEstate[]    @relation("UserEstates")
+  agency         Agency?         @relation(fields: [agencyId], references: [id])
+  profession     Profession?     @relation(fields: [professionId], references: [id])
+  verified       Verified?       @relation(fields: [verifiedId], references: [id])
   favorites      RealEstate[]    @relation("UserFavorites")
+
+  @@index([agencyId], map: "User_agencyId_fkey")
+  @@index([professionId], map: "User_professionId_fkey")
+  @@index([verifiedId], map: "User_verifiedId_fkey")
 }
 
 model Profession {
   id      String          @id @default(uuid())
   title   String
   key     String          @unique
-  users   User[]
   workers ServiceWorker[]
+  users   User[]
 }
 
 model Verified {
@@ -66,7 +69,6 @@ model Service {
 model ServiceWorker {
   id           String     @id @default(uuid())
   name         String
-  profession   Profession @relation(fields: [professionId], references: [id])
   professionId String
   description  String?
   phone        String
@@ -74,6 +76,9 @@ model ServiceWorker {
   address      String
   photo        String
   createdAt    DateTime   @default(now())
+  profession   Profession @relation(fields: [professionId], references: [id])
+
+  @@index([professionId], map: "ServiceWorker_professionId_fkey")
 }
 
 model MessageThread {
@@ -81,12 +86,13 @@ model MessageThread {
   status     MessageStatus
   isArchived Boolean        @default(false)
   email      String
-  replies    MessageReply[] @relation("ThreadReplies")
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+  userId     String
+  replies    MessageReply[] @relation("ThreadReplies")
+  user       User           @relation(fields: [userId], references: [id])
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  @@index([userId], map: "MessageThread_userId_fkey")
 }
 
 model MessageReply {
@@ -94,140 +100,147 @@ model MessageReply {
   message        String
   timestamp      DateTime      @default(now())
   threadId       String
-  thread         MessageThread @relation("ThreadReplies", fields: [threadId], references: [id], onDelete: Cascade)
   senderName     String
   senderLastName String
   senderEmail    String
+  thread         MessageThread @relation("ThreadReplies", fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId], map: "MessageReply_threadId_fkey")
 }
 
 model RealEstate {
-  id              Int                @id @default(autoincrement())
-  images          RealEstateImages[]
-  label           String             @db.Text
-  isTop           Boolean            @default(false)
-  isFavorite      Boolean            @default(false)
-  isSelectedOnMap Boolean            @default(false)
-  status          EstateStatus       @default(moderation)
-  typeKey         String
-  typeValue       String
-  country         String?
-  state           String?
-
-  addressLocation String
-  addressLat      Float
-  addressLng      Float
-
-  rooms          Int
-  bathroomsTotal Int?
-  bathroomsDesc  String? @db.Text
-
-  operationKey   String
-  operationValue String
-
-  livingAreaM2 String
-  landAreaM2   String?
-
-  price          String
-  parkPlacePrice String?
-  views          Int     @default(0)
-
-  yearBuilt         Int
-  floors            String?
-  garage            String?
-  heating           String?
-  commissionFree    String?
-  balcony           String?
-  terrace           String?
-  garden            String?
-  energyCertificate String?
-  HBW               String?
-  HBWEnergyClass    String?
-  fGEE              String?
-  fGEEEnergyClass   String?
-  cellar            Boolean @default(false)
-
-  netOperationCosts           String?
+  id                          Int                      @id @default(autoincrement())
+  label                       String                   @db.Text
+  isTop                       Boolean                  @default(false)
+  typeKey                     String
+  typeValue                   String
+  addressLocation             String
+  addressLat                  Float
+  addressLng                  Float
+  rooms                       Int
+  bathroomsTotal              Int?
+  bathroomsDesc               String?                  @db.Text
+  operationKey                String
+  operationValue              String
+  livingAreaM2                String
+  landAreaM2                  String?
+  price                       String
+  views                       Int                      @default(0)
+  yearBuilt                   Int
+  floors                      String?
+  garage                      String?
+  heating                     String?
+  commissionFree              String?
+  additionalFeatures          String?                  @db.Text
+  kitchen                     String?
+  loungeArea                  String?
+  furnished                   String?
+  availability                String?
+  additionalInfo              String?
+  ownerId                     String
+  createdAt                   DateTime                 @default(now())
+  updatedAt                   DateTime                 @updatedAt
+  number                      String?
+  rentFormation               String?
+  street                      String?
+  visibleDetailedAddress      Boolean                  @default(false)
+  status                      EstateStatus             @default(moderation)
+  country                     String?
+  state                       String?
+  HBW                         String?
+  HBWEnergyClass              String?
+  balcony                     String?
   brokerCommissions           String?
   brokerCommissionsPercentage String?
-  propertyDescriptions        String? @db.Text
-  locationDescriptions        String? @db.Text
+  cellar                      Boolean                  @default(false)
+  energyCertificate           String?
+  fGEE                        String?
+  fGEEEnergyClass             String?
+  garden                      String?
+  isFavorite                  Boolean                  @default(false)
+  isSelectedOnMap             Boolean                  @default(false)
+  locationDescriptions        String?                  @db.Text
+  netOperationCosts           String?
+  parkPlacePrice              String?
+  propertyDescriptions        String?                  @db.Text
+  terrace                     String?
+  owner                       User                     @relation("UserEstates", fields: [ownerId], references: [id])
+  equipments                  RealEstateEquipments[]
+  fees                        RealEstateFees[]
+  images                      RealEstateImages[]
+  monthlyCosts                RealEstateMonthlyCosts[]
+  premises                    RealEstatePremises[]
+  favoredBy                   User[]                   @relation("UserFavorites")
 
-  additionalFeatures String? @db.Text
-  kitchen            String?
-  loungeArea         String?
-  furnished          String?
-  availability       String?
-  additionalInfo     String?
-
-  ownerId String
-  owner   User   @relation("UserEstates", fields: [ownerId], references: [id])
-
-  favoredBy User[] @relation("UserFavorites")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  street                 String?
-  number                 String?
-  visibleDetailedAddress Boolean @default(false)
-  rentFormation          String?
-
-  premises     RealEstatePremises[]
-  equipments   RealEstateEquipments[]
-  fees         RealEstateFees[]
-  monthlyCosts RealEstateMonthlyCosts[]
+  @@index([ownerId], map: "RealEstate_ownerId_fkey")
 }
 
 model RealEstatePremises {
-  id    String @id @default(uuid())
-  key   String
-  label String @db.Text
-  name  String @db.Text
-  value String @db.Text
-
+  id           String     @id @default(uuid())
+  value        String     @db.Text
   realEstateId Int
+  key          String
+  label        String     @db.Text
+  name         String     @db.Text
   realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+
+  @@index([realEstateId], map: "RealEstatePremises_realEstateId_fkey")
 }
 
 model RealEstateEquipments {
-  id    String  @id @default(uuid())
-  key   String
-  label String  @db.Text
-  value Boolean
-
+  id           String     @id @default(uuid())
   realEstateId Int
+  key          String
+  label        String     @db.Text
   realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+
+  @@index([realEstateId], map: "RealEstateEquipments_realEstateId_fkey")
 }
 
 model RealEstateFees {
-  id           String @id @default(uuid())
+  id           String     @id @default(uuid())
   title        String
+  descriptions String
+  realEstateId Int
   key          String
   value        String
-  descriptions String
-
-  realEstateId Int
   realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+
+  @@index([realEstateId], map: "RealEstateFees_realEstateId_fkey")
 }
 
 model RealEstateMonthlyCosts {
-  id           String @id @default(uuid())
+  id           String     @id @default(uuid())
   title        String
-  key          String
-  cost         String
   descriptions String
-
   realEstateId Int
+  cost         String
+  key          String
   realEstate   RealEstate @relation(fields: [realEstateId], references: [id])
+
+  @@index([realEstateId], map: "RealEstateMonthlyCosts_realEstateId_fkey")
 }
 
 model RealEstateImages {
-  id       String     @id @default(uuid())
-  url      String?    @db.Text
-  estateId Int
-  estate   RealEstate @relation(fields: [estateId], references: [id], onDelete: Cascade)
+  id        String     @id @default(uuid())
+  url       String?    @db.Text
+  estateId  Int
+  createdAt DateTime   @default(now())
+  estate    RealEstate @relation(fields: [estateId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  @@index([estateId], map: "RealEstateImages_estateId_fkey")
+}
+
+model Equipment {
+  id            String   @id @default(uuid())
+  label         String
+  key           String
+  category      String
+  categoryTitle String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("equipments")
 }
 
 enum MessageStatus {

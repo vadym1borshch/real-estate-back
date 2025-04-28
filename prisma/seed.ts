@@ -4,6 +4,7 @@ import { servicesSeed } from './seedServices'
 import { serviceWorkersSeed } from './seedServiceWorkers'
 import { estateSeed } from './seedEstates'
 import { estateImagesSeed } from './seedEstateImages'
+import { seedEquipment } from './seedEquipments'
 
 const prisma = new PrismaClient()
 
@@ -14,6 +15,7 @@ async function main() {
   await serviceWorkersSeed()
   await estateSeed()
   await estateImagesSeed()
+  await seedEquipment()
 }
 
 main()
