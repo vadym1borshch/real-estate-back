@@ -111,12 +111,13 @@ export const ERROR_MESSAGES = {
   ADS_NOT_FOUND: 'ads not found',
   AD_NOT_FOUND: 'Ad not found',
   ESTATE_NOT_FOUND: 'Estate not found',
-  MISSING_ESTATE_ID: 'Missing estate ID',
+  MISSING_ESTATE_ID: 'Estate ID is required',
   SERVER_ERROR: 'Server error',
-  NOTHING_CHANGED: 'Nothing changed',
-  ESTATE_DELETED: 'real estate delete successfully',
-  ESTATE_UPDATED: 'Estate updated',
-  ESTATE_CREATED: 'Estate created successfully'
+  NOTHING_CHANGED: 'Nothing to update',
+  ESTATE_DELETED: 'Estate deleted successfully',
+  ESTATE_UPDATED: 'Estate updated successfully',
+  ESTATE_CREATED: 'Estate created successfully',
+  FEES_FIELDS_NOT_FOUND: 'Fees fields not found'
 } as const
 
 export const ESTATE_TYPES = {

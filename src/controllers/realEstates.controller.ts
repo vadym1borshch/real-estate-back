@@ -8,10 +8,11 @@ import {
   ESTATE_TYPE_VALUES,
   OPERATION_TYPES,
   OPERATION_VALUES,
-  Premise
+  Premise,
+  MonthlyCost
 } from '../types/realEstate.types'
 import { log } from 'console'
-import { Equipment, Prisma } from '@prisma/client'
+import { Equipment, FeesField, Prisma } from '@prisma/client'
 
 /**
  * Formats the estate response to ensure consistent data structure
@@ -146,6 +147,7 @@ export const createRealEstate = async (req: Request, res: Response) => {
       addressLng,
       rooms,
       livingAreaM2,
+      landAreaM2,
       price,
       ...params
     } = req.body as CreateRealEstateInput
@@ -163,7 +165,8 @@ export const createRealEstate = async (req: Request, res: Response) => {
         addressLat: parseFloat(addressLat),
         addressLng: parseFloat(addressLng),
         rooms: +rooms,
-        livingAreaM2: livingAreaM2,
+        livingAreaM2: +livingAreaM2,
+        landAreaM2: +landAreaM2,
         price: price,
         owner: {
           connect: { id: userId },
@@ -207,13 +210,27 @@ export const updateRealEstateAdditionalInfo = async (req: Request, res: Response
   try {
     // Calculate total living area from premises
     let totalLivingArea = 0
+    let wcCount = 0
+    let bathroomCount = 0
+    
     if (premises) {
+      // Calculate living area
       const livingSpacePremises = premises.filter((premise: Premise) => premise.key === 'living-space')
       totalLivingArea = livingSpacePremises.reduce((sum: number, premise: Premise) => {
         const value = parseFloat(premise.value?.toString() || '0')
         return sum + (isNaN(value) ? 0 : value)
       }, 0)
+
+      // Count bathrooms and WCs by their keys
+      wcCount = premises.filter((premise: Premise) => premise.key === 'wc').length
+      bathroomCount = premises.filter((premise: Premise) => premise.key === 'bathroom').length
     }
+
+    // Create bathroom description string
+    const bathroomsDesc = [
+      wcCount > 0 ? `${wcCount} WC` : '',
+      bathroomCount > 0 ? `${bathroomCount} Bath` : ''
+    ].filter(Boolean).join(' | ')
 
     // Update basic estate information and related data
     const updated = await prisma.realEstate.update({
@@ -231,17 +248,25 @@ export const updateRealEstateAdditionalInfo = async (req: Request, res: Response
         ...(fees && {
           fees: {
             deleteMany: {},
-            create: fees,
+            create: fees.map((fee: FeesField) => ({
+              ...fee,
+              descriptions: fee.value ? `${fee.value} ${fee.descriptions}` : fee.descriptions
+            })),
           },
         }),
         ...(monthlyCosts && {
           monthlyCosts: {
             deleteMany: {},
-            create: monthlyCosts,
+            create: monthlyCosts.map((cost: MonthlyCost) => ({
+              ...cost,
+              descriptions: cost.cost ? `${cost.cost} ${cost.descriptions}` : cost.descriptions
+            })),
           },
         }),
         ...(premises && { 
-          livingAreaM2: totalLivingArea.toString() 
+          livingAreaM2: totalLivingArea,
+          bathroomsTotal: wcCount + bathroomCount,
+          bathroomsDesc: bathroomsDesc || undefined
         }),
       },
       include: { 
@@ -379,7 +404,7 @@ export const updateRealEstate = async (req: Request, res: Response) => {
     const typeV = existing.typeValue.split('.')
     const estateTypeValue = typeV[typeV.length - 1]
 
-    const { images, postCode, city, visibleDetailedAddress, cellar, number, typeKey, ...restUpdates } = updates
+    const { images, postCode, city, visibleDetailedAddress, cellar, number, typeKey, landAreaM2, wc, ...restUpdates } = updates
 
     const updated = await prisma.realEstate.update({
       where: { id },
@@ -389,6 +414,8 @@ export const updateRealEstate = async (req: Request, res: Response) => {
         typeValue: estateTypeValue !== typeKey ? `${key}${typeKey}` : `${key}${estateTypeValue}`,
         cellar: cellar !== 'no',
         number: number !== 'no' ? number : null,
+        landAreaM2: landAreaM2 ? landAreaM2 : null,
+        bathroomsTotal: wc ? wc : 1,
         typeKey,
         ...restUpdates,
         ...(images && {

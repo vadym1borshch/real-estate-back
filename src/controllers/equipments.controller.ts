@@ -18,7 +18,8 @@ export const getEquipments = async (req: Request, res: Response) => {
       acc[equipment.category].push({
         id: equipment.id,
         label: equipment.label,
-        key: equipment.key
+        key: equipment.key,
+        title: equipment.categoryTitle,
       })
       return acc
     }, {} as Record<string, any[]>)

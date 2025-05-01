@@ -122,8 +122,8 @@ model RealEstate {
   bathroomsDesc               String?                  @db.Text
   operationKey                String
   operationValue              String
-  livingAreaM2                String
-  landAreaM2                  String?
+  livingAreaM2                Int
+  landAreaM2                  Int?
   price                       String
   views                       Int                      @default(0)
   yearBuilt                   Int
@@ -156,7 +156,6 @@ model RealEstate {
   energyCertificate           String?
   fGEE                        String?
   fGEEEnergyClass             String?
-  garden                      String?
   isFavorite                  Boolean                  @default(false)
   isSelectedOnMap             Boolean                  @default(false)
   locationDescriptions        String?                  @db.Text
@@ -241,6 +240,30 @@ model Equipment {
   updatedAt     DateTime @updatedAt
 
   @@map("equipments")
+}
+
+model FeesField {
+  id           String   @id @default(uuid())
+  title        String   @db.Text
+  key          String
+  value        String
+  descriptions String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("fees_fields")
+}
+
+model PremisesField {
+  id        String   @id @default(uuid())
+  value     String   @db.Text
+  key       String
+  label     String   @db.Text
+  name      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("premises_fields")
 }
 
 enum MessageStatus {
