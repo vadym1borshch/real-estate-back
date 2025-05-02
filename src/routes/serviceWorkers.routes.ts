@@ -4,7 +4,7 @@ import { serviceWorker } from '../controllers/serviceWorker.controller'
 
 const router = Router()
 
-router.get('/service-workers', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   await serviceWorker(req, res)
 })
 

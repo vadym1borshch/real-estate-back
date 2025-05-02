@@ -7,7 +7,7 @@ const upload = multer({ dest: 'uploads/' })
 
 const router = Router()
 
-router.post('/upload-images', upload.array('images', 10), async (req: Request, res: Response) => {
+router.post('/', upload.array('images', 10), async (req: Request, res: Response) => {
   await uploadImages(req, res)
 })
 

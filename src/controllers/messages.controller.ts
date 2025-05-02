@@ -19,37 +19,33 @@ export const getMessages = async (req: Request, res: Response) => {
   }
 }
 
-
-export const postMessage = async (req: Request, res: Response) => {
-  const { userId, messageText, senderName, senderEmail, senderLastName } = req.body
-
+export const updateMessage = async (req: Request, res: Response) => {
+  const { id, isArchived } = req.body
   try {
+    const message = await prisma.messageThread.findUnique({ where: { id } })
+    if (!message) return res.status(404).json({ error: 'messages not found' })
 
-    const thread = await prisma.messageThread.findFirst({ where: { userId } })
-
-    if (!thread) {
-      return res.status(404).json({ error: 'Message thread not found for this user' })
-    }
-
-    await prisma.messageReply.create({
+    const updatedMessage = await prisma.messageThread.update({
+      where: { id },
       data: {
-        message: messageText,
-        threadId: thread.id,
-        senderName,
-        senderEmail,
-        senderLastName,
-        timestamp: new Date(),
+        status: 'read',
+        ...(typeof isArchived === 'boolean' ? { isArchived } : {}),
       },
     })
-
-    const updatedThread = await prisma.messageThread.findUnique({
-      where: { id: thread.id },
-      include: { replies: true },
-    })
-
-    res.status(201).json({ messageThread: updatedThread })
+    res.json({ updatedMessage })
   } catch (err) {
-    console.error('[POST MESSAGE ERROR]', err)
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
+export const deleteMessage = async (req: Request, res: Response) => {
+  const { id } = req.query as { id: string }
+  try {
+    const message = await prisma.messageThread.findUnique({ where: { id } })
+    if (!message) return res.status(404).json({ error: 'messages not found' })
+    await prisma.messageThread.delete({ where: { id } })
+    res.status(200).json({ error: 'message deleted' })
+  } catch (err) {
     res.status(500).json({ error: 'Server error' })
   }
 }

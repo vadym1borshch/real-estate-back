@@ -16,6 +16,9 @@ import feesFields from './routes/feesFields.routes'
 import premisesFields from './routes/premisesFields.routes'
 import { verifySocketToken } from './middlewares/authSocket'
 import { setupSocket } from './socket'
+import swaggerUi from 'swagger-ui-express'
+import { openApiDocument } from './openapi/@generate'
+
 
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
 dotenv.config({ path: envFile })
@@ -44,16 +47,19 @@ app.use(cors({
   ],
   credentials: true,
 }))
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))
+
 app.use(express.json())
 
 app.use('/auth', authRoutes)
-app.use('/', serviceRoutes)
-app.use('/', serviceWorkerRoutes)
-app.use('/', profession)
+app.use('/services', serviceRoutes)
+app.use('/service-workers', serviceWorkerRoutes)
+app.use('/professions', profession)
 app.use('/user', user)
 app.use('/messages', messages)
 app.use('/real-estates', realEstates)
-app.use('/', uploadImages)
+app.use('/upload-images', uploadImages)
 app.use('/equipments', equipments)
 app.use('/fees-fields', feesFields)
 app.use('/premises-fields', premisesFields)

@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 import { prisma } from '../prisma/client'
 
 
-export const service = async (req: Request, res: Response) => {
+export const getService = async (req: Request, res: Response) => {
 
   try {
     const services = await prisma.service.findMany()
@@ -14,7 +14,7 @@ export const service = async (req: Request, res: Response) => {
   }
 }
 
-export const update = async (req: Request, res: Response) => {
+export const updateService = async (req: Request, res: Response) => {
   const { id, checked } = req.body
   try {
     const service = await prisma.service.findUnique({ where: { id } })

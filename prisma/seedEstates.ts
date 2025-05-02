@@ -468,7 +468,7 @@ const estates: RealEstate[] = [
     operationKey: 'buy',
     operationValue: 'real-estate.operations.buy',
     livingAreaM2: 460.07,
-    landAreaM2: 1500 ,
+    landAreaM2: 1500,
     price: '2.900.000,00 €',
     views: 37,
     yearBuilt: 2005,
@@ -746,10 +746,29 @@ export const estateSeed = async () => {
       phone: '123456789',
       address: 'Seed Street',
       password: await bcrypt.hash('qwerty1234', 10),
-    }
+    },
   })
 
-  const res = await prisma.realEstate.createMany({
+  await prisma.messageThread.create({
+    data: {
+      status: 'new',
+      isArchived: false,
+      email: 'support@yourapp.com',
+      userId: initialUserForEstates.id,
+      replies: {
+        create: [
+          {
+            message: '👋 Welcome to the platform!',
+            senderName: 'Support',
+            senderLastName: 'Team',
+            senderEmail: 'support@yourapp.com',
+          },
+        ],
+      },
+    },
+  })
+
+  await prisma.realEstate.createMany({
     data: estates.map(estate => {
       return {
         ...estate,
