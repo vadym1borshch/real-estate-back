@@ -10,11 +10,17 @@ import { User } from '@prisma/client'
 export const me = async (req: Request, res: Response) => {
   const { id } = req.query as { id: string }
 
-  const user = await prisma.user.findUnique({ where: { id } })
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' })
+  try {
+    const user = await prisma.user.findUnique({ where: { id } })
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    return res.status(200).json({ user })
+  } catch (err) {
+    console.error('[ME ERROR]', err)
+    return res.status(500).json({ error: 'Server error' })
   }
-  return res.status(200).json({ user })
 }
 
 export const uploadAvatar = async (req: Request, res: Response) => {
