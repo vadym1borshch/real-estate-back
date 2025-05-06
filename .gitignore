@@ -2,3 +2,4 @@
 .env.production
 .idea
 node_modules
+.vscode
